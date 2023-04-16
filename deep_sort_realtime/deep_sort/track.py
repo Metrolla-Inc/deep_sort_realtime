@@ -1,4 +1,7 @@
 # vim: expandtab:ts=4:sw=4
+
+import numpy as np
+
 class TrackState:
     """
     Enumeration type for the single target track state. Newly created tracks are
@@ -108,6 +111,16 @@ class Track:
         self.det_conf = det_conf
         self.instance_mask = instance_mask
         self.others = others
+        # add a list to append trajectories in
+        self.trajectory = []
+        # append the current detection center to trajectory
+        if original_ltwh is not None:
+            self.trajectory.append(self.to_center())
+
+    def to_center(self):
+        ret = self.original_ltwh.copy()
+        ret[:2] += ret[2:] / 2
+        return ret[:2]    
 
     def to_tlwh(self, orig=False, orig_strict=False):
         """Get current position in bounding box format `(top left x, top left y,
@@ -214,6 +227,52 @@ class Track:
         '''
         return self.latest_feature
 
+    def get_trajectory(self):
+        """
+        Get trajectory info associated with the track.
+        """
+        return self.trajectory
+
+    def get_velocity(self, fps=5):
+        """
+        Get velocity info of the track.
+        """
+        # If the trajectory only has one element, we cannot get its velocity
+        if len(self.trajectory) < 2:
+            return None
+        # convert trajectory from list to array
+        trajectory_array = np.asarray(self.trajectory)
+        # calculate the velocity as discrete different (x[t+1] - x[t]) * fps
+        velocity = (trajectory_array[1:] - trajectory_array[:-1]) * fps
+        # reduce the velocity to the mean velocity
+        velocity = np.mean(velocity, axis=0)
+        # calculate the velocity magnitude
+        velocity_magnitude = np.sqrt(np.sum(velocity ** 2))
+        # calculate the velocity as unit direction vector
+        velocity_direction = velocity / velocity_magnitude
+        # return velocity, velocity magnitude and direction
+        return velocity, velocity_magnitude, velocity_direction
+
+    def get_trajectory_slope(self):
+        """
+        Get trajectory slope info of the track.
+        """
+        # If the trajectory only has one element, we cannot get its velocity
+        if len(self.trajectory) < 2:
+            return None
+        else:
+            # convert trajectory from list to array
+            trajectory_array = np.asarray(self.trajectory)
+            # calculate the difference in y-direction
+            diff_y = trajectory_array[-1, 1] - trajectory_array[0, 1]
+            # calculate the difference in x-direction with a small value
+            # added to avoid division by zero
+            diff_x = trajectory_array[-1, 0] - trajectory_array[0, 0] + 1e-07
+            # calculate the slope
+            slope = diff_y / diff_x
+            # return the calculated slope
+            return slope
+        
     def predict(self, kf):
         """Propagate the state distribution to the current time step using a
         Kalman filter prediction step.
@@ -254,6 +313,7 @@ class Track:
         self.det_class = detection.class_name
         self.instance_mask = detection.instance_mask
         self.others = detection.others
+        self.trajectory.append(self.to_center())
 
         self.hits += 1
 
