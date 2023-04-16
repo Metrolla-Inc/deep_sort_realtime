@@ -239,7 +239,7 @@ class Track:
         """
         # If the trajectory only has one element, we cannot get its velocity
         if len(self.trajectory) < 2:
-            return None
+            return None, None, None
         # convert trajectory from list to array
         trajectory_array = np.asarray(self.trajectory)
         # calculate the velocity as discrete different (x[t+1] - x[t]) * fps
