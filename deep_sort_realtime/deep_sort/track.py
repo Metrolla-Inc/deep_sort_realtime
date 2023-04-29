@@ -244,10 +244,8 @@ class Track:
         trajectory_array = np.asarray(self.trajectory)
         # calculate the velocity as discrete different (x[t+1] - x[t]) * fps
         velocity = (trajectory_array[1:] - trajectory_array[:-1]) * fps
-        print(velocity.shape)
         # calculate the velocity magnitude
         velocity_magnitude = np.sqrt(np.sum(velocity ** 2, axis=-1, keepdims=True))
-        print(velocity_magnitude.shape)
         # calculate the velocity as unit direction vector
         velocity_direction = velocity / velocity_magnitude
         # reduce the velocity to the mean velocity
