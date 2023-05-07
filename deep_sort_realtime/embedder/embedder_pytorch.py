@@ -128,6 +128,7 @@ class MobileNetv2_Embedder(object):
 
         for this_batch in batch(preproc_imgs, bs=self.max_batch_size):
             this_batch = torch.cat(this_batch, dim=0)
+            print("Tracker input batch size: ", this_batch.shape)
             if self.gpu:
                 this_batch = this_batch.cuda()
                 if self.half:
