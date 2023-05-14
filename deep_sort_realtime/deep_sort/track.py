@@ -247,7 +247,7 @@ class Track:
         # calculate the velocity magnitude
         velocity_magnitude = np.sqrt(np.sum(velocity ** 2, axis=-1, keepdims=True))
         # calculate the velocity as unit direction vector
-        velocity_direction = velocity / velocity_magnitude
+        velocity_direction = velocity / (velocity_magnitude + 1e-8)
         # reduce the velocity to the mean velocity
         average_velocity = np.mean(velocity_magnitude)
         # return velocity, velocity magnitude and direction
