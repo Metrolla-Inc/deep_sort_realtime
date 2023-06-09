@@ -119,7 +119,7 @@ class Track:
 
     def to_center(self):
         ret = self.original_ltwh.copy()
-        ret[:2] += ret[2:] / 2
+        ret[:2] += ret[2:] // 2
         return ret[:2]    
 
     def to_tlwh(self, orig=False, orig_strict=False):
